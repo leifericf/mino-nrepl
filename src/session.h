@@ -20,6 +20,13 @@ typedef struct nrepl_session {
     struct nrepl_session *next;
 } nrepl_session_t;
 
+/* Initialize the session module with a runtime state. Must be called
+ * once before any other session_* function. */
+void session_init(mino_state_t *S);
+
+/* Return the runtime state used by all sessions. */
+mino_state_t *session_state(void);
+
 /* Create a fresh session with its own env. Returns NULL on failure. */
 nrepl_session_t *session_create(void);
 

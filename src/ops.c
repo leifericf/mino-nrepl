@@ -172,7 +172,7 @@ static void op_eval(bc_val_t *msg, int fd)
 
     session_reset_output(s);
     session_set_current(s);
-    result = mino_eval_string(code, s->env);
+    result = mino_eval_string(session_state(), code, s->env);
     session_set_current(NULL);
 
     /* Send captured stdout as "out" message if any. */
@@ -197,7 +197,7 @@ static void op_eval(bc_val_t *msg, int fd)
         free(repr);
     } else {
         /* Error. */
-        const char *errmsg = mino_last_error();
+        const char *errmsg = mino_last_error(session_state());
         bc_val_t   *resp   = base_response(msg);
         const char *err[]  = {"done", "error", NULL};
 
@@ -242,7 +242,7 @@ static void op_completions(bc_val_t *msg, int fd)
     }
 
     /* Get all symbols via apropos with empty string. */
-    all_syms = mino_eval_string("(apropos \"\")", s->env);
+    all_syms = mino_eval_string(session_state(), "(apropos \"\")", s->env);
 
     /* Walk the symbol list and filter by prefix. */
     {

@@ -139,6 +139,7 @@ int main(int argc, char **argv)
 {
     int                port      = 0;
     const char        *bind_addr = "127.0.0.1";
+    mino_state_t      *S;
     int                srv_fd;
     struct sockaddr_in addr;
     socklen_t          addrlen = sizeof(addr);
@@ -147,6 +148,10 @@ int main(int argc, char **argv)
     int                i;
 
     parse_args(argc, argv, &port, &bind_addr);
+
+    /* Initialize the mino runtime. */
+    S = mino_state_new();
+    session_init(S);
 
     /* Set up signal handlers. */
     signal(SIGINT,  handle_signal);
@@ -284,6 +289,7 @@ int main(int argc, char **argv)
         client_free(i - 1);
     }
     close(srv_fd);
+    mino_state_free(S);
     /* atexit handler removes .nrepl-port */
 
     return 0;

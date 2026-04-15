@@ -15,7 +15,8 @@
 /* Session list                                                         */
 /* -------------------------------------------------------------------- */
 
-static nrepl_session_t *sessions = NULL;
+static mino_state_t    *nrepl_state     = NULL;
+static nrepl_session_t *sessions        = NULL;
 
 /* -------------------------------------------------------------------- */
 /* Active session for output capture (single-threaded)                  */
@@ -23,6 +24,8 @@ static nrepl_session_t *sessions = NULL;
 
 static nrepl_session_t *current_session = NULL;
 
+void session_init(mino_state_t *S)    { nrepl_state = S; }
+mino_state_t *session_state(void)     { return nrepl_state; }
 void session_set_current(nrepl_session_t *s) { current_session = s; }
 
 /* Append text to the current session's output buffer. */
@@ -56,7 +59,7 @@ static char *val_to_str(const mino_val_t *v)
     char *buf;
 
     if (!tmp) return NULL;
-    mino_print_to(tmp, v);
+    mino_print_to(nrepl_state, tmp, v);
     len = ftell(tmp);
     if (len <= 0) { fclose(tmp); return NULL; }
     buf = malloc((size_t)len + 1);
@@ -96,7 +99,7 @@ static mino_val_t *capture_println(mino_val_t *args, mino_env_t *env)
         args = mino_cdr(args);
     }
     capture_append("\n", 1);
-    return mino_nil();
+    return mino_nil(mino_current_state());
 }
 
 /* (prn & args) — print each arg's pr-str separated by spaces, with newline. */
@@ -116,7 +119,7 @@ static mino_val_t *capture_prn(mino_val_t *args, mino_env_t *env)
         args = mino_cdr(args);
     }
     capture_append("\n", 1);
-    return mino_nil();
+    return mino_nil(mino_current_state());
 }
 
 /* -------------------------------------------------------------------- */
@@ -161,14 +164,16 @@ nrepl_session_t *session_create(void)
 
     generate_uuid(s->id);
 
-    s->env = mino_env_new();
+    s->env = mino_env_new(nrepl_state);
     if (!s->env) { free(s); return NULL; }
-    mino_install_core(s->env);
-    mino_install_io(s->env);
+    mino_install_core(nrepl_state, s->env);
+    mino_install_io(nrepl_state, s->env);
 
     /* Replace println/prn with capturing versions. */
-    mino_env_set(s->env, "println", mino_prim("println", capture_println));
-    mino_env_set(s->env, "prn",     mino_prim("prn",     capture_prn));
+    mino_env_set(nrepl_state, s->env, "println",
+                 mino_prim(nrepl_state, "println", capture_println));
+    mino_env_set(nrepl_state, s->env, "prn",
+                 mino_prim(nrepl_state, "prn",     capture_prn));
 
     s->next  = sessions;
     sessions = s;
@@ -191,7 +196,7 @@ void session_close(const char *id)
         if (strcmp((*pp)->id, id) == 0) {
             nrepl_session_t *s = *pp;
             *pp = s->next;
-            mino_env_free(s->env);
+            mino_env_free(nrepl_state, s->env);
             free(s->out_buf);
             free(s);
             return;
