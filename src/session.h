@@ -1,8 +1,9 @@
 /*
  * session.h -- nREPL session management.
  *
- * Each session owns an isolated mino_env_t. Output from println/prn
- * during eval is captured to a per-session buffer.
+ * Each session owns an isolated mino_state_t and mino_env_t. Sessions
+ * share nothing and can (in principle) evaluate concurrently. Output
+ * from println/prn during eval is captured to a per-session buffer.
  */
 
 #ifndef SESSION_H
@@ -13,19 +14,13 @@
 
 typedef struct nrepl_session {
     char                  id[37];    /* UUID v4: 8-4-4-4-12 + NUL */
+    mino_state_t         *state;    /* per-session runtime state   */
     mino_env_t           *env;
     char                 *out_buf;   /* captured stdout during eval */
     size_t                out_len;
     size_t                out_cap;
     struct nrepl_session *next;
 } nrepl_session_t;
-
-/* Initialize the session module with a runtime state. Must be called
- * once before any other session_* function. */
-void session_init(mino_state_t *S);
-
-/* Return the runtime state used by all sessions. */
-mino_state_t *session_state(void);
 
 /* Create a fresh session with its own env. Returns NULL on failure. */
 nrepl_session_t *session_create(void);
@@ -52,6 +47,6 @@ void session_set_current(nrepl_session_t *s);
  * Capture a mino value's printed representation to a NUL-terminated
  * string. Caller must free the returned pointer. Returns NULL on failure.
  */
-char *session_print_value(const mino_val_t *val);
+char *session_print_value(mino_state_t *S, const mino_val_t *val);
 
 #endif /* SESSION_H */

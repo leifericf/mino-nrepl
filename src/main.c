@@ -9,9 +9,7 @@
  */
 
 #include "bencode.h"
-#include "session.h"
 #include "ops.h"
-#include "mino.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -139,7 +137,6 @@ int main(int argc, char **argv)
 {
     int                port      = 0;
     const char        *bind_addr = "127.0.0.1";
-    mino_state_t      *S;
     int                srv_fd;
     struct sockaddr_in addr;
     socklen_t          addrlen = sizeof(addr);
@@ -149,9 +146,7 @@ int main(int argc, char **argv)
 
     parse_args(argc, argv, &port, &bind_addr);
 
-    /* Initialize the mino runtime. */
-    S = mino_state_new();
-    session_init(S);
+    /* Sessions create their own mino states on demand. */
 
     /* Set up signal handlers. */
     signal(SIGINT,  handle_signal);
@@ -289,7 +284,9 @@ int main(int argc, char **argv)
         client_free(i - 1);
     }
     close(srv_fd);
-    mino_state_free(S);
+    /* Each session frees its own state when closed.
+     * Any remaining sessions are leaked at exit since the process is
+     * ending anyway.  A full cleanup would iterate session_list(). */
     /* atexit handler removes .nrepl-port */
 
     return 0;

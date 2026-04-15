@@ -172,7 +172,7 @@ static void op_eval(bc_val_t *msg, int fd)
 
     session_reset_output(s);
     session_set_current(s);
-    result = mino_eval_string(session_state(), code, s->env);
+    result = mino_eval_string(s->state, code, s->env);
     session_set_current(NULL);
 
     /* Send captured stdout as "out" message if any. */
@@ -185,7 +185,7 @@ static void op_eval(bc_val_t *msg, int fd)
 
     if (result) {
         /* Success: send value. */
-        char       *repr = session_print_value(result);
+        char       *repr = session_print_value(s->state, result);
         bc_val_t   *resp = base_response(msg);
         const char *done[] = {"done", NULL};
 
@@ -197,7 +197,7 @@ static void op_eval(bc_val_t *msg, int fd)
         free(repr);
     } else {
         /* Error. */
-        const char *errmsg = mino_last_error(session_state());
+        const char *errmsg = mino_last_error(s->state);
         bc_val_t   *resp   = base_response(msg);
         const char *err[]  = {"done", "error", NULL};
 
@@ -242,7 +242,7 @@ static void op_completions(bc_val_t *msg, int fd)
     }
 
     /* Get all symbols via apropos with empty string. */
-    all_syms = mino_eval_string(session_state(), "(apropos \"\")", s->env);
+    all_syms = mino_eval_string(s->state, "(apropos \"\")", s->env);
 
     /* Walk the symbol list and filter by prefix. */
     {
@@ -268,7 +268,7 @@ static void op_completions(bc_val_t *msg, int fd)
                 }
             } else {
                 /* It's a symbol — print it to get the name. */
-                char *repr = session_print_value(sym);
+                char *repr = session_print_value(s->state, sym);
                 if (repr && (plen == 0 || strncmp(repr, prefix, plen) == 0)) {
                     bc_val_t *entry = bc_dict_new();
                     bc_dict_set(entry, "candidate", bc_cstring(repr));

@@ -1,5 +1,8 @@
 /*
  * session.c -- nREPL session management.
+ *
+ * Each session owns an independent mino_state_t and mino_env_t.
+ * Sessions share nothing and can (in principle) evaluate concurrently.
  */
 
 #include "session.h"
@@ -15,7 +18,6 @@
 /* Session list                                                         */
 /* -------------------------------------------------------------------- */
 
-static mino_state_t    *nrepl_state     = NULL;
 static nrepl_session_t *sessions        = NULL;
 
 /* -------------------------------------------------------------------- */
@@ -24,8 +26,6 @@ static nrepl_session_t *sessions        = NULL;
 
 static nrepl_session_t *current_session = NULL;
 
-void session_init(mino_state_t *S)    { nrepl_state = S; }
-mino_state_t *session_state(void)     { return nrepl_state; }
 void session_set_current(nrepl_session_t *s) { current_session = s; }
 
 /* Append text to the current session's output buffer. */
@@ -52,14 +52,14 @@ static void capture_append(const char *text, size_t len)
 /* -------------------------------------------------------------------- */
 
 /* Helper: print a mino value to a malloc'd string via tmpfile. */
-static char *val_to_str(const mino_val_t *v)
+static char *val_to_str(mino_state_t *S, const mino_val_t *v)
 {
     FILE *tmp = tmpfile();
     long  len;
     char *buf;
 
     if (!tmp) return NULL;
-    mino_print_to(nrepl_state, tmp, v);
+    mino_print_to(S, tmp, v);
     len = ftell(tmp);
     if (len <= 0) { fclose(tmp); return NULL; }
     buf = malloc((size_t)len + 1);
@@ -90,7 +90,7 @@ static mino_val_t *capture_println(mino_state_t *S, mino_val_t *args,
         if (mino_to_string(v, &s, &slen)) {
             capture_append(s, slen);
         } else {
-            char *repr = val_to_str(v);
+            char *repr = val_to_str(S, v);
             if (repr) {
                 capture_append(repr, strlen(repr));
                 free(repr);
@@ -111,7 +111,7 @@ static mino_val_t *capture_prn(mino_state_t *S, mino_val_t *args,
     (void)env;
     while (args && !mino_is_nil(args) && mino_is_cons(args)) {
         mino_val_t *v = mino_car(args);
-        char *repr = val_to_str(v);
+        char *repr = val_to_str(S, v);
         if (!first) capture_append(" ", 1);
         if (repr) {
             capture_append(repr, strlen(repr));
@@ -166,16 +166,18 @@ nrepl_session_t *session_create(void)
 
     generate_uuid(s->id);
 
-    s->env = mino_env_new(nrepl_state);
-    if (!s->env) { free(s); return NULL; }
-    mino_install_core(nrepl_state, s->env);
-    mino_install_io(nrepl_state, s->env);
+    /* Each session gets its own isolated runtime state. */
+    s->state = mino_state_new();
+    if (!s->state) { free(s); return NULL; }
+
+    s->env = mino_new(s->state);
+    if (!s->env) { mino_state_free(s->state); free(s); return NULL; }
 
     /* Replace println/prn with capturing versions. */
-    mino_env_set(nrepl_state, s->env, "println",
-                 mino_prim(nrepl_state, "println", capture_println));
-    mino_env_set(nrepl_state, s->env, "prn",
-                 mino_prim(nrepl_state, "prn",     capture_prn));
+    mino_env_set(s->state, s->env, "println",
+                 mino_prim(s->state, "println", capture_println));
+    mino_env_set(s->state, s->env, "prn",
+                 mino_prim(s->state, "prn",     capture_prn));
 
     s->next  = sessions;
     sessions = s;
@@ -198,7 +200,8 @@ void session_close(const char *id)
         if (strcmp((*pp)->id, id) == 0) {
             nrepl_session_t *s = *pp;
             *pp = s->next;
-            mino_env_free(nrepl_state, s->env);
+            mino_env_free(s->state, s->env);
+            mino_state_free(s->state);
             free(s->out_buf);
             free(s);
             return;
@@ -217,7 +220,7 @@ void session_reset_output(nrepl_session_t *s)
     }
 }
 
-char *session_print_value(const mino_val_t *val)
+char *session_print_value(mino_state_t *S, const mino_val_t *val)
 {
-    return val_to_str(val);
+    return val_to_str(S, val);
 }
