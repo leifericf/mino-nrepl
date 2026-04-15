@@ -76,7 +76,8 @@ static char *val_to_str(const mino_val_t *v)
 }
 
 /* (println & args) — print each arg separated by spaces, with newline. */
-static mino_val_t *capture_println(mino_val_t *args, mino_env_t *env)
+static mino_val_t *capture_println(mino_state_t *S, mino_val_t *args,
+                                   mino_env_t *env)
 {
     int first = 1;
     (void)env;
@@ -99,11 +100,12 @@ static mino_val_t *capture_println(mino_val_t *args, mino_env_t *env)
         args = mino_cdr(args);
     }
     capture_append("\n", 1);
-    return mino_nil(mino_current_state());
+    return mino_nil(S);
 }
 
 /* (prn & args) — print each arg's pr-str separated by spaces, with newline. */
-static mino_val_t *capture_prn(mino_val_t *args, mino_env_t *env)
+static mino_val_t *capture_prn(mino_state_t *S, mino_val_t *args,
+                               mino_env_t *env)
 {
     int first = 1;
     (void)env;
@@ -119,7 +121,7 @@ static mino_val_t *capture_prn(mino_val_t *args, mino_env_t *env)
         args = mino_cdr(args);
     }
     capture_append("\n", 1);
-    return mino_nil(mino_current_state());
+    return mino_nil(S);
 }
 
 /* -------------------------------------------------------------------- */
