@@ -1,6 +1,6 @@
 CC      ?= cc
 CFLAGS  ?= -std=c99 -Wall -Wpedantic -Wextra -O2
-MINO_SRCS = mino/src/mino.c mino/src/eval_special.c \
+MINO_SRCS = mino/src/mino.c mino/src/diag.c mino/src/eval_special.c \
             mino/src/eval_special_defs.c mino/src/eval_special_bindings.c \
             mino/src/eval_special_control.c mino/src/eval_special_fn.c \
             mino/src/runtime_state.c mino/src/runtime_var.c \
