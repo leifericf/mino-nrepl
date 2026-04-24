@@ -4,6 +4,10 @@ All notable changes to mino-nrepl are documented here.
 
 ## Unreleased
 
+- Tracking mino v0.48.0: character type, sorted collections, first-class
+  vars, transients, and the structured exception + argument-parsing
+  helpers in `public_embed.c`. Makefile extended to compile the new
+  `transient.c` and `public_embed.c` TUs.
 - Tracking mino v0.42.0: generational + incremental garbage collector,
   public GC API, literal-builder barrier fix. Makefile extended to
   compile the new `runtime_gc_roots.c`, `runtime_gc_major.c`,
