@@ -4,6 +4,16 @@ All notable changes to mino-nrepl are documented here.
 
 ## Unreleased
 
+- Tracking mino v0.74.0 (deferred core surface): `*ns*` as a real var,
+  `bound-fn` / `bound-fn*`, `read` with options, `clojure.edn/read`,
+  `destructure`, and regex capture groups with `re-matcher` /
+  `re-groups`. No nREPL-side changes needed; eval and completion ops
+  surface the new bindings through the existing session env.
+- Tracking mino v0.73.0 (first-class namespaces): each namespace owns
+  its own root binding table, vars are first-class objects, auto-
+  resolved keywords and namespaced map literals land at read time,
+  and source files use `.clj` instead of `.mino`. Makefile picks up
+  the new `runtime/ns_env.c` and `runtime/path_buf.c` TUs.
 - Tracking mino v0.48.0: character type, sorted collections, first-class
   vars, transients, and the structured exception + argument-parsing
   helpers in `public_embed.c`. Makefile extended to compile the new
