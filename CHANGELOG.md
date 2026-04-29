@@ -4,6 +4,10 @@ All notable changes to mino-nrepl are documented here.
 
 ## Unreleased
 
+- Tracking mino v0.95.5 (Clojure-side hygiene pass: bundled stdlib
+  refactor). No nREPL-side changes — the hygiene pass is internal
+  to the mino-side library; the bencode wire format and op
+  dispatcher are unchanged.
 - Tracking mino v0.94.0 (empty-list canon parity). No nREPL-side
   changes; the bencode encoder operates on its own type tags, not
   `mino_val_t`, so the new `MINO_EMPTY_LIST` enum entry has no effect
