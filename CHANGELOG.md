@@ -4,6 +4,10 @@ All notable changes to mino-nrepl are documented here.
 
 ## Unreleased
 
+- Tracking mino v0.94.0 (empty-list canon parity). No nREPL-side
+  changes; the bencode encoder operates on its own type tags, not
+  `mino_val_t`, so the new `MINO_EMPTY_LIST` enum entry has no effect
+  on the wire format.
 - Tracking mino v0.93.0 (C refactoring pass; bundled `mino deps` and
   `mino task` tooling; bootstrap Makefile). The Makefile gains three
   gen-mino-header entries for the new `lib/mino/*` sources that v0.93.0
