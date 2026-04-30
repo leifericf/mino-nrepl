@@ -4,6 +4,17 @@ All notable changes to mino-nrepl are documented here.
 
 ## Unreleased
 
+- Tracking mino v0.97.5 (Kwargs + Audit + Hygiene cycle: kwargs
+  destructuring matches Clojure 1.11 (inline pairs, trailing map,
+  mixed; `:or` defaults eval correctly); `iteration` rewritten to
+  canon `& {:keys [...]}` shape; `sort-by` and `reductions` gain
+  multi-arity; `src/core.clj` 80-char wrap; `defn` lifted so six
+  bootstrap `def + fn` forms become `defn`; `clojure.core.async`
+  gains canon `reduce` / `transduce` / `split` / `partition-by`;
+  `clojure.spec.alpha` gains `abbrev` / `describe`). No nREPL-side
+  changes — the bencode encoder serialises printed forms via mino's
+  printer; the new fns surface through eval and op completion via
+  the existing routing. Builds clean against the bumped submodule.
 - Tracking mino v0.96.8 (Canon-Parity cycle: real `MINO_VOLATILE`
   primitive, stateful-transducer rewrites, lazy-seq recur-on-skip,
   transient reductions, comp/partial/some-fn/every-pred unrolling
