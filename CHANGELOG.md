@@ -4,6 +4,13 @@ All notable changes to mino-nrepl are documented here.
 
 ## Unreleased
 
+- Tracking mino v0.103.0 (Worker-List Lock Split: brief
+  `worker_list_lock` separated from the recursive `state_lock` so
+  a tight embedder loop can no longer starve future / agent
+  worker entry-link or exit-detach. Lock order: state_lock outer,
+  worker_list_lock inner. No nrepl-side changes -- the bencode
+  encoder operates on its own type tags and the public C surface
+  is unchanged, so this is a drop-in submodule bump).
 - Tracking mino v0.102.1 (Agents finish MVP cycle: per-state agent
   workers + run-queues with separate POOLED / SOLO pools for
   `send` / `send-off`; public C-API perimeter for embedders
