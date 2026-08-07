@@ -147,7 +147,7 @@ static void op_eval(bc_val_t *msg, int fd)
     const char      *code = dict_str(msg, "code");
     const char      *sess = dict_str(msg, "session");
     nrepl_session_t *s;
-    mino_val_t      *result;
+    mino_val      *result;
 
     if (!code || !sess) {
         bc_val_t   *resp = base_response(msg);
@@ -218,7 +218,7 @@ static void op_completions(bc_val_t *msg, int fd)
     const char      *prefix = dict_str(msg, "prefix");
     const char      *sess   = dict_str(msg, "session");
     nrepl_session_t *s;
-    mino_val_t      *all_syms;
+    mino_val      *all_syms;
     bc_val_t        *resp;
     const char      *done[] = {"done", NULL};
     size_t           match_count = 0;
@@ -242,15 +242,15 @@ static void op_completions(bc_val_t *msg, int fd)
     }
 
     /* Get all symbols via apropos with empty string. */
-    all_syms = mino_eval_string(s->state, "(apropos \"\")", s->env);
+    all_syms = mino_eval_string(s->state, "(keys (ns-publics 'clojure.core))", s->env);
 
     /* Walk the symbol list and filter by prefix. */
     {
-        mino_val_t *cur = all_syms;
+        mino_val *cur = all_syms;
         size_t      plen = strlen(prefix);
 
         while (cur && !mino_is_nil(cur) && mino_is_cons(cur)) {
-            mino_val_t *sym = mino_car(cur);
+            mino_val *sym = mino_car(cur);
             const char *name;
             size_t      nlen;
 

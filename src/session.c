@@ -1,7 +1,7 @@
 /*
  * session.c -- nREPL session management.
  *
- * Each session owns an independent mino_state_t and mino_env_t.
+ * Each session owns an independent mino_state and mino_env.
  * Sessions share nothing and can (in principle) evaluate concurrently.
  */
 
@@ -52,7 +52,7 @@ static void capture_append(const char *text, size_t len)
 /* -------------------------------------------------------------------- */
 
 /* Helper: print a mino value to a malloc'd string via tmpfile. */
-static char *val_to_str(mino_state_t *S, const mino_val_t *v)
+static char *val_to_str(mino_state *S, const mino_val *v)
 {
     FILE *tmp = tmpfile();
     long  len;
@@ -76,13 +76,13 @@ static char *val_to_str(mino_state_t *S, const mino_val_t *v)
 }
 
 /* (println & args) — print each arg separated by spaces, with newline. */
-static mino_val_t *capture_println(mino_state_t *S, mino_val_t *args,
-                                   mino_env_t *env)
+static mino_val *capture_println(mino_state *S, mino_val *args,
+                                   mino_env *env)
 {
     int first = 1;
     (void)env;
     while (args && !mino_is_nil(args) && mino_is_cons(args)) {
-        mino_val_t *v = mino_car(args);
+        mino_val *v = mino_car(args);
         const char *s;
         size_t      slen;
         if (!first) capture_append(" ", 1);
@@ -104,13 +104,13 @@ static mino_val_t *capture_println(mino_state_t *S, mino_val_t *args,
 }
 
 /* (prn & args) — print each arg's pr-str separated by spaces, with newline. */
-static mino_val_t *capture_prn(mino_state_t *S, mino_val_t *args,
-                               mino_env_t *env)
+static mino_val *capture_prn(mino_state *S, mino_val *args,
+                               mino_env *env)
 {
     int first = 1;
     (void)env;
     while (args && !mino_is_nil(args) && mino_is_cons(args)) {
-        mino_val_t *v = mino_car(args);
+        mino_val *v = mino_car(args);
         char *repr = val_to_str(S, v);
         if (!first) capture_append(" ", 1);
         if (repr) {
@@ -170,7 +170,7 @@ nrepl_session_t *session_create(void)
     s->state = mino_state_new();
     if (!s->state) { free(s); return NULL; }
 
-    s->env = mino_new(s->state);
+    s->env = mino_env_new_default(s->state);
     if (!s->env) { mino_state_free(s->state); free(s); return NULL; }
 
     /* Replace println/prn with capturing versions. */
@@ -220,7 +220,7 @@ void session_reset_output(nrepl_session_t *s)
     }
 }
 
-char *session_print_value(mino_state_t *S, const mino_val_t *val)
+char *session_print_value(mino_state *S, const mino_val *val)
 {
     return val_to_str(S, val);
 }
