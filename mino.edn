@@ -1,0 +1,18 @@
+;; Bootstrap (first time only):
+;;   cd mino && make && cd ..
+;;
+;; The submodule's Makefile generates the bundled-source headers and
+;; links the mino binary in one step. After bootstrap, every build
+;; goes through this file: `./mino/mino task build` does the
+;; incremental work, regenerating the amalgamation only when the
+;; submodule pin changes.
+
+{:paths ["lib" "mino/lib" "mino"]
+ :tasks
+ {build {:doc  "Build the mino-nrepl binary against the mino amalgamation"
+         :task mino-nrepl.tasks/build}
+  test  {:doc  "Run the nREPL test suite"
+         :deps [build]
+         :task mino-nrepl.tasks/test}
+  clean {:doc  "Remove build artifacts"
+         :task mino-nrepl.tasks/clean}}}

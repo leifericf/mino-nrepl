@@ -7,10 +7,13 @@ An [nREPL](https://nrepl.org) server for [mino](https://github.com/leifericf/min
 ```
 git clone --recursive https://github.com/leifericf/mino-nrepl.git
 cd mino-nrepl
-make
+cd mino && make && cd ..
+./mino/mino task build
 ```
 
-Requires a C99 compiler. No other dependencies.
+The one-time `cd mino && make` bootstraps the mino submodule. Every
+build after that goes through `./mino/mino task build`. Requires a C99
+compiler. No other dependencies.
 
 ## Usage
 
@@ -55,7 +58,7 @@ Command Palette > "Calva: Connect to a Running REPL Server" > "Generic" > enter 
 ## Tests
 
 ```
-make test
+./mino/mino task test
 ```
 
 ## License

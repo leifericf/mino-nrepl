@@ -2,6 +2,7 @@ mino-nrepl
 *.o
 *.dSYM/
 .nrepl-port
+mino/dist/
 
 # Local working files
 .local/
