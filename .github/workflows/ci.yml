@@ -1,0 +1,37 @@
+name: ci
+
+# Build mino-nrepl against its pinned mino submodule and run the nREPL
+# test suite. mino is bootstrapped from the submodule (`make` produces
+# ./mino/mino); every consumer build then goes through the mino task
+# runner (`./mino/mino task build`), which compiles the server against
+# mino's single-file amalgamation. A mino C-tree reorg is a no-op for
+# this build once the submodule pin is bumped.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-test:
+    name: build + test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout (with submodule)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Bootstrap mino (from submodule)
+        working-directory: mino
+        run: make
+
+      - name: Build mino-nrepl against the amalgamation
+        run: ./mino/mino task build
+
+      - name: Test
+        run: ./mino/mino task test
